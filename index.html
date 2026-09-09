@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rebecq Portugal — Club de football</title>
+<meta name="description" content="Rebecq Portugal — club de football à Rebecq, Belgique. La passion portugaise au cœur du football belge.">
+<link rel="icon" href="https://res.cloudinary.com/dkm8cbylh/image/upload/v1788970278/ChatGPT_Image_9_sept._2026_18_11_08_sqvkm5.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:            #060907;
+    --bg-soft:       #0c1310;
+    --green-deep:    #07281c;
+    --green:         #0e4a32;
+    --green-light:   #1c7a52;
+    --red:           #b3182f;
+    --red-bright:    #d8283f;
+    --gold:          #d9ac4f;
+    --gold-soft:     #f0d99b;
+    --cream:         #f4efe2;
+    --muted:         #9db0a4;
+    --line:          rgba(244,239,226,0.10);
+
+    --font-display: 'Anton', sans-serif;
+    --font-body:    'Manrope', sans-serif;
+
+    --container: 1180px;
+    --ease: cubic-bezier(.22,.68,0,1);
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--cream);
+    font-family:var(--font-body);
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  img{ max-width:100%; display:block; }
+  a{ color:inherit; text-decoration:none; }
+  ul{ list-style:none; }
+
+  ::selection{ background:var(--red); color:var(--cream); }
+
+  .wrap{
+    width:100%;
+    max-width:var(--container);
+    margin-inline:auto;
+    padding-inline:clamp(20px,5vw,48px);
+  }
+
+  /* ---------- background texture ---------- */
+  .grain-field{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 80% 55% at 18% 0%, rgba(14,74,50,0.55), transparent 60%),
+      radial-gradient(ellipse 65% 50% at 100% 30%, rgba(179,24,47,0.28), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 10% 100%, rgba(14,74,50,0.35), transparent 60%),
+      var(--bg);
+  }
+  .grain-field::before{
+    content:"";
+    position:absolute; inset:0;
+    opacity:0.05;
+    background-image:
+      repeating-linear-gradient(45deg, var(--gold) 0 1px, transparent 1px 74px),
+      repeating-linear-gradient(-45deg, var(--gold) 0 1px, transparent 1px 74px);
+  }
+
+  /* ---------- loader ---------- */
+  #loader{
+    position:fixed; inset:0; z-index:1000;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+    transition:clip-path 1s var(--ease), opacity .6s ease .5s;
+  }
+  #loader .loader-core{
+    position:relative;
+    width:min(34vw,180px); height:min(34vw,180px);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #loader svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); }
+  #loader circle{
+    fill:none; stroke-width:2;
+  }
+  #loader .track{ stroke:rgba(244,239,226,0.08); }
+  #loader .arc{
+    stroke:var(--gold);
+    stroke-linecap:round;
+    stroke-dasharray:402;
+    stroke-dashoffset:402;
+    transition:stroke-dashoffset 1.7s var(--ease);
+  }
+  #loader img{
+    width:56%; height:56%; object-fit:contain;
+    opacity:0; transform:scale(.7);
+    transition:opacity .7s ease .2s, transform .8s var(--ease) .2s;
+    filter:drop-shadow(0 0 18px rgba(217,172,79,0.25));
+  }
+  #loader .loader-label{
+    position:absolute; bottom:-2.6rem; left:50%; transform:translateX(-50%);
+    font-size:0.68rem; letter-spacing:.24em; color:var(--muted);
+    opacity:0; transition:opacity .6s ease .4s;
+    white-space:nowrap;
+  }
+  #loader.ring-in .arc{ stroke-dashoffset:0; }
+  #loader.ring-in img{ opacity:1; transform:scale(1); }
+  #loader.ring-in .loader-label{ opacity:1; }
+  #loader.hide{
+    clip-path:polygon(0 0,100% 0,100% 0,0 0);
+    opacity:0;
+  }
+  body.is-loading{ overflow:hidden; height:100vh; }
+
+  /* ---------- nav ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    padding:18px 0;
+    background:linear-gradient(to bottom, rgba(6,9,7,0.85), rgba(6,9,7,0));
+    backdrop-filter:blur(2px);
+    transition:background .4s ease, padding .4s ease, border-color .4s ease;
+    border-bottom:1px solid transparent;
+  }
+  header.scrolled{
+    padding:12px 0;
+    background:rgba(6,9,7,0.86);
+    border-bottom-color:var(--line);
+  }
+  header .wrap{ display:flex; align-items:center; justify-content:space-between; }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand img{ width:40px; height:40px; object-fit:contain; }
+  .brand-text{ display:flex; flex-direction:column; line-height:1.1; }
+  .brand-text strong{ font-family:var(--font-display); font-size:1.02rem; letter-spacing:.03em; font-weight:400; }
+  .brand-text span{ font-size:.66rem; letter-spacing:.18em; color:var(--muted); }
+
+  nav.primary-nav ul{ display:flex; gap:2.4rem; align-items:center; }
+  nav.primary-nav a{
+    position:relative; font-size:.92rem; font-weight:600; color:var(--cream);
+    padding:6px 0;
+  }
+  nav.primary-nav a::after{
+    content:""; position:absolute; left:0; right:100%; bottom:0; height:1px;
+    background:var(--gold); transition:right .35s var(--ease);
+  }
+  nav.primary-nav a:hover::after{ right:0; }
+  .nav-cta{
+    border:1px solid var(--gold); padding:9px 18px; border-radius:2px;
+    font-size:.82rem; font-weight:700; transition:background .3s ease, color .3s ease;
+  }
+  .nav-cta:hover{ background:var(--gold); color:var(--bg); }
+  .nav-cta::after{ display:none; }
+
+  .burger{
+    display:none; flex-direction:column; gap:5px; width:26px; cursor:pointer; z-index:210;
+    background:none; border:none;
+  }
+  .burger span{ height:2px; background:var(--cream); border-radius:2px; transition:transform .35s var(--ease), opacity .35s ease; }
+  .burger.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+  .burger.open span:nth-child(2){ opacity:0; }
+  .burger.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:flex; align-items:center;
+    padding-top:110px;
+    overflow:hidden;
+  }
+  .sash{
+    position:absolute; top:-15%; right:-8%;
+    width:60%; height:150%;
+    transform:rotate(18deg);
+    background:linear-gradient(180deg,
+      var(--red-bright) 0%, var(--red-bright) 40%,
+      var(--gold) 40%, var(--gold) 46%,
+      var(--green-light) 46%, var(--green-light) 100%);
+    opacity:0.16;
+    filter:blur(1px);
+    z-index:0;
+  }
+  .sash::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(115deg, transparent 30%, rgba(244,239,226,0.35) 48%, transparent 62%);
+    background-size:220% 220%;
+    animation:sheen 7s ease-in-out infinite;
+  }
+  @keyframes sheen{
+    0%,100%{ background-position:120% 0%; }
+    50%{ background-position:-20% 100%; }
+  }
+
+  .hero .wrap{
+    position:relative; z-index:2;
+    display:grid;
+    grid-template-columns:1.15fr .85fr;
+    gap:clamp(24px,5vw,60px);
+    align-items:center;
+    width:100%;
+  }
+
+  .hero-copy .eyebrow-line{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:22px;
+    font-size:.82rem; color:var(--muted); font-weight:600;
+  }
+  .eyebrow-line .dot-flag{ display:flex; gap:3px; }
+  .eyebrow-line .dot-flag i{ width:7px; height:7px; border-radius:50%; display:block; }
+  .eyebrow-line .dot-flag i:nth-child(1){ background:var(--green-light); }
+  .eyebrow-line .dot-flag i:nth-child(2){ background:var(--red-bright); }
+
+  .hero-copy h1{
+    font-family:var(--font-display);
+    font-weight:400;
+    font-size:clamp(2.9rem, 7.6vw, 6.4rem);
+    line-height:0.94;
+    letter-spacing:.005em;
+  }
+  .hero-copy h1 .line2{
+    background:linear-gradient(92deg, var(--gold-soft), var(--gold) 45%, var(--red-bright) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  .hero-copy p.tagline{
+    margin-top:26px;
+    max-width:46ch;
+    font-size:clamp(1rem,1.6vw,1.15rem);
+    color:var(--muted);
+  }
+
+  .hero-actions{ display:flex; gap:16px; flex-wrap:wrap; margin-top:38px; }
+  .btn{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:14px 26px; font-weight:700; font-size:.92rem;
+    border-radius:2px; transition:transform .3s var(--ease), background .3s ease, border-color .3s ease, color .3s ease;
+  }
+  .btn-primary{ background:var(--red-bright); color:var(--cream); border:1px solid var(--red-bright); }
+  .btn-primary:hover{ background:#c92238; transform:translateY(-2px); }
+  .btn-ghost{ border:1px solid var(--line); color:var(--cream); }
+  .btn-ghost:hover{ border-color:var(--gold); color:var(--gold); transform:translateY(-2px); }
+  .btn svg{ width:16px; height:16px; }
+
+  .hero-emblem{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    aspect-ratio:1/1;
+  }
+  .hero-emblem .ring{
+    position:absolute; inset:0;
+    border-radius:50%;
+    border:1px solid var(--line);
+  }
+  .hero-emblem .ring.r2{ inset:9%; border-style:dashed; border-color:rgba(217,172,79,0.35); animation:spin 40s linear infinite; }
+  .hero-emblem .ring.r3{ inset:20%; border-color:rgba(179,24,47,0.25); }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .hero-emblem img{
+    width:52%; height:52%; object-fit:contain;
+    filter:drop-shadow(0 18px 40px rgba(0,0,0,0.55));
+    animation:float 6s ease-in-out infinite;
+  }
+  @keyframes float{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-10px); }
+  }
+
+  .scroll-cue{
+    position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    color:var(--muted); font-size:.7rem; letter-spacing:.2em;
+    z-index:2;
+  }
+  .scroll-cue .stick{
+    width:1px; height:34px; background:linear-gradient(var(--gold), transparent);
+    animation:scrollpulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollpulse{
+    0%{ transform:scaleY(0.3); opacity:.3; }
+    50%{ transform:scaleY(1); opacity:1; }
+    100%{ transform:scaleY(0.3); opacity:.3; }
+  }
+
+  /* ---------- section shell ---------- */
+  section{ position:relative; z-index:1; padding:clamp(70px,12vw,140px) 0; }
+  .section-head{ max-width:640px; margin-bottom:clamp(40px,6vw,64px); }
+  .section-head .kicker{
+    color:var(--gold); font-weight:700; font-size:.85rem; margin-bottom:14px; display:block;
+  }
+  .section-head h2{
+    font-family:var(--font-display); font-weight:400;
+    font-size:clamp(2rem,4.6vw,3.4rem); line-height:1.04;
+  }
+  .section-head p{ margin-top:18px; color:var(--muted); font-size:1.02rem; max-width:52ch; }
+
+  hr.divider{
+    border:none; height:2px; width:64px;
+    background:linear-gradient(90deg, var(--green-light), var(--gold) 50%, var(--red-bright));
+    margin:0 0 20px 0;
+  }
+
+  /* ---------- identity ---------- */
+  .identity{ background:linear-gradient(180deg, transparent, rgba(14,74,50,0.12) 30%, transparent 90%); }
+  .identity .grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:clamp(30px,6vw,70px);
+    align-items:center;
+  }
+  .identity-visual{
+    position:relative;
+    aspect-ratio:4/5;
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+    background:var(--bg-soft);
+  }
+  .identity-visual .split{
+    position:absolute; inset:0;
+    background:
+      linear-gradient(135deg, var(--green-deep) 0 52%, transparent 52%),
+      linear-gradient(135deg, transparent 52%, var(--red) 52% 100%);
+  }
+  .identity-visual .gold-line{
+    position:absolute; inset:0;
+    background:linear-gradient(135deg, transparent calc(52% - 1px), var(--gold) 52%, transparent calc(52% + 1px));
+    opacity:.8;
+  }
+  .identity-visual .crest-mark{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:44%;
+  }
+  .identity-visual .crest-mark img{ filter:drop-shadow(0 10px 30px rgba(0,0,0,0.6)); }
+
+  .identity-copy p{ color:var(--muted); margin-bottom:16px; max-width:50ch; }
+  .identity-copy p:last-of-type{ margin-bottom:0; }
+  .identity-copy strong{ color:var(--cream); font-weight:700; }
+
+  /* ---------- stats ---------- */
+  .stats{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .stats .grid{
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:1px; background:var(--line);
+    border:1px solid var(--line);
+  }
+  .stat-card{
+    background:var(--bg);
+    padding:clamp(26px,4vw,38px) clamp(20px,3vw,30px);
+    opacity:0; transform:translateY(16px);
+    transition:opacity .7s var(--ease), transform .7s var(--ease);
+  }
+  .stat-card.in{ opacity:1; transform:translateY(0); }
+  .stat-card svg{ width:26px; height:26px; color:var(--gold); margin-bottom:18px; }
+  .stat-card .label{ font-size:.78rem; color:var(--muted); margin-bottom:8px; }
+  .stat-card .value{ font-family:var(--font-display); font-weight:400; font-size:1.5rem; }
+
+  /* ---------- crest ---------- */
+  .crest-section .grid{
+    display:grid; grid-template-columns:.85fr 1.15fr; gap:clamp(30px,6vw,70px); align-items:center;
+  }
+  .crest-frame{
+    position:relative; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+  }
+  .crest-frame .bg-glow{
+    position:absolute; inset:6%;
+    border-radius:50%;
+    background:radial-gradient(circle at 50% 45%, rgba(217,172,79,0.16), transparent 65%);
+  }
+  .crest-frame .ring{
+    position:absolute; inset:4%; border-radius:50%; border:1px solid var(--line);
+  }
+  .crest-frame .ring.dash{
+    inset:14%; border-style:dashed; border-color:rgba(217,172,79,0.3);
+    animation:spin 60s linear infinite;
+  }
+  .crest-frame img{
+    width:50%; object-fit:contain;
+    filter:drop-shadow(0 20px 45px rgba(0,0,0,0.6));
+  }
+  .crest-copy dl{ display:grid; grid-template-columns:auto 1fr; gap:14px 22px; margin-top:28px; }
+  .crest-copy dt{ color:var(--muted); font-size:.85rem; white-space:nowrap; padding-top:2px; }
+  .crest-copy dd{ font-weight:600; }
+  .crest-copy dl{ border-top:1px solid var(--line); padding-top:26px; }
+
+  /* ---------- CTA band ---------- */
+  .cta-band{
+    position:relative;
+    padding:clamp(60px,9vw,100px) 0;
+    background:linear-gradient(120deg, var(--green-deep), var(--bg) 55%, var(--green-deep));
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .cta-band .wrap{
+    display:flex; align-items:center; justify-content:space-between; gap:30px; flex-wrap:wrap;
+  }
+  .cta-band h3{ font-family:var(--font-display); font-weight:400; font-size:clamp(1.8rem,4vw,2.6rem); max-width:16ch; }
+  .cta-band .accent{ color:var(--gold); }
+
+  /* ---------- footer ---------- */
+  footer{ padding-top:clamp(50px,8vw,80px); }
+  footer .top{
+    display:flex; justify-content:space-between; gap:40px; flex-wrap:wrap;
+    padding-bottom:40px; border-bottom:1px solid var(--line);
+  }
+  footer .brand-block{ display:flex; gap:14px; align-items:center; max-width:340px; }
+  footer .brand-block img{ width:46px; height:46px; object-fit:contain; }
+  footer .brand-block p{ color:var(--muted); font-size:.9rem; margin-top:4px; }
+  footer .links{ display:flex; gap:60px; flex-wrap:wrap; }
+  footer .links h4{ font-size:.78rem; letter-spacing:.1em; color:var(--muted); margin-bottom:14px; font-weight:700; }
+  footer .links a{ display:block; font-size:.92rem; margin-bottom:10px; transition:color .25s ease; }
+  footer .links a:hover{ color:var(--gold); }
+  footer .bottom{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:24px 0 32px; color:var(--muted); font-size:.82rem; flex-wrap:wrap; gap:10px;
+  }
+  .social-dot{
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .social-dot svg{ width:16px; height:16px; }
+
+  /* ---------- mobile ---------- */
+  @media (max-width:900px){
+    .hero .wrap{ grid-template-columns:1fr; text-align:left; }
+    .hero-emblem{ order:-1; width:56%; margin-inline:auto; }
+    .identity .grid, .crest-section .grid{ grid-template-columns:1fr; }
+    .crest-frame{ width:64%; margin-inline:auto; }
+    .stats .grid{ grid-template-columns:repeat(2,1fr); }
+  }
+
+  @media (max-width:760px){
+    nav.primary-nav{
+      position:fixed; inset:0 0 0 auto; width:min(78vw,320px);
+      background:var(--bg-soft);
+      border-left:1px solid var(--line);
+      padding:100px 32px 32px;
+      transform:translateX(100%);
+      transition:transform .45s var(--ease);
+      z-index:205;
+    }
+    nav.primary-nav.open{ transform:translateX(0); }
+    nav.primary-nav ul{ flex-direction:column; align-items:flex-start; gap:1.6rem; }
+    .nav-cta{ margin-top:10px; }
+    .burger{ display:flex; }
+    .hero-actions{ flex-direction:column; align-items:stretch; }
+    .cta-band .wrap{ flex-direction:column; align-items:flex-start; }
+  }
+
+  @media (max-width:560px){
+    .stats .grid{ grid-template-columns:1fr; }
+    .hero-emblem{ width:74%; }
+  }
+</style>
+</head>
+<body class="is-loading">
+
+<div class="grain-field"></div>
+
+<!-- ============ LOADER ============ -->
+<div id="loader">
+  <div class="loader-core">
+    <svg viewBox="0 0 140 140">
+      <circle class="track" cx="70" cy="70" r="64"></circle>
+      <circle class="arc" cx="70" cy="70" r="64"></circle>
+    </svg>
+    <img src="https://res.cloudinary.com/dkm8cbylh/image/upload/v1788970278/ChatGPT_Image_9_sept._2026_18_11_08_sqvkm5.png" alt="Rebecq Portugal">
+    <span class="loader-label">REBECQ PORTUGAL</span>
+  </div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header id="siteHeader">
+  <div class="wrap">
+    <a href="#accueil" class="brand">
+      <img src="https://res.cloudinary.com/dkm8cbylh/image/upload/v1788970278/ChatGPT_Image_9_sept._2026_18_11_08_sqvkm5.png" alt="Blason Rebecq Portugal">
+      <span class="brand-text">
+        <strong>Rebecq Portugal</strong>
+        <span>Club de football</span>
+      </span>
+    </a>
+
+    <nav class="primary-nav" id="primaryNav">
+      <ul>
+        <li><a href="#accueil">Accueil</a></li>
+        <li><a href="#identite">Identité</a></li>
+        <li><a href="#blason">Le blason</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a class="nav-cta" href="https://www.facebook.com/people/Rebecq-Portugal/100094013284769/" target="_blank" rel="noopener">Facebook</a></li>
+      </ul>
+    </nav>
+
+    <button class="burger" id="burger" aria-label="Ouvrir le menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="accueil">
+    <div class="sash"></div>
+    <div class="wrap">
+      <div class="hero-copy">
+        <div class="eyebrow-line">
+          <span class="dot-flag"><i></i><i></i></span>
+          Rebecq, Belgique
+        </div>
+        <h1>REBECQ<br><span class="line2">PORTUGAL</span></h1>
+        <p class="tagline">La passion portugaise au cœur du football belge. Un club, deux racines, un seul maillot.</p>
+        <div class="hero-actions">
+          <a href="#identite" class="btn btn-primary">
+            Découvrir le club
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="https://www.facebook.com/people/Rebecq-Portugal/100094013284769/" target="_blank" rel="noopener" class="btn btn-ghost">
+            Nous suivre sur Facebook
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-emblem">
+        <div class="ring"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <img src="https://res.cloudinary.com/dkm8cbylh/image/upload/v1788970278/ChatGPT_Image_9_sept._2026_18_11_08_sqvkm5.png" alt="Blason Rebecq Portugal">
+      </div>
+    </div>
+
+    <div class="scroll-cue"><span class="stick"></span>SCROLL</div>
+  </section>
+
+  <!-- ============ IDENTITÉ ============ -->
+  <section class="identity" id="identite">
+    <div class="wrap">
+      <div class="grid">
+        <div class="identity-visual">
+          <div class="split"></div>
+          <div class="gold-line"></div>
+          <div class="crest-mark">
+            <img src="https://res.cloudinary.com/dkm8cbylh/image/upload/v1788970278/ChatGPT_Image_9_sept._2026_18_11_08_sqvkm5.png" alt="Blason Rebecq Portugal">
+          </div>
+        </div>
+
+        <div class="identity-copy">
+          <hr class="divider">
+          <span class="kicker" style="color:var(--gold); font-weight:700; font-size:.85rem; display:block; margin-bottom:14px;">Notre identité</span>
+          <h2 style="font-family:var(--font-display); font-weight:400; font-size:clamp(2rem,4.6vw,3rem); line-height:1.05; margin-bottom:22px;">Deux nations, un seul maillot.</h2>
+          <p>Né de la rencontre entre la communauté portugaise et les terrains de Rebecq, le club porte fièrement <strong>le rouge et le vert du Portugal</strong> sur le sol du Brabant wallon.</p>
+          <p>Ici, chaque match raconte une histoire d'attachement : celle d'une communauté qui a fait du ballon rond un pont entre deux pays, deux cultures et une même passion.</p>
+          <p>Un club amateur, une ambition familiale, et un maillot qui parle deux langues.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="stats">
+    <div class="wrap" style="padding:0;">
+      <div class="grid">
+        <div class="stat-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7-5.2-9.5-9.6C.6 7.6 3 4 6.8 4 9 4 10.8 5.2 12 7c1.2-1.8 3-3 5.2-3 3.8 0 6.2 3.6 4.3 7.4C19 15.8 12 21 12 21z"/></svg>
+          <div class="label">Origine</div>
+          <div class="value">Portugal</div>
+        </div>
+        <div class="stat-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-7.5 8-13a8 8 0 1 0-16 0c0 5.5 8 13 8 13z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <div class="label">Ville</div>
+          <div class="value">Rebecq</div>
+        </div>
+        <div class="stat-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 3 3 7l4 3-1 11h12L17 10l4-3-4-4-5 3-5-3z"/></svg>
+          <div class="label">Couleurs</div>
+          <div class="value">Rouge &amp; Vert</div>
+        </div>
+        <div class="stat-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+          <div class="label">Esprit</div>
+          <div class="value">Famille &amp; Football</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BLASON ============ -->
+  <section class="crest-section" id="blason">
+    <div class="wrap">
+      <div class="grid">
+        <div class="crest-frame">
+          <div class="bg-glow"></div>
+          <div class="ring"></div>
+          <div class="ring dash"></div>
+          <img src="https://res.cloudinary.com/dkm8cbylh/image/upload/v1788970278/ChatGPT_Image_9_sept._2026_18_11_08_sqvkm5.png" alt="Blason Rebecq Portugal">
+        </div>
+
+        <div class="crest-copy">
+          <hr class="divider">
+          <span style="color:var(--gold); font-weight:700; font-size:.85rem; display:block; margin-bottom:14px;">Le blason</span>
+          <h2 style="font-family:var(--font-display); font-weight:400; font-size:clamp(2rem,4.6vw,3rem); line-height:1.05; margin-bottom:20px;">Un emblème, deux héritages.</h2>
+          <p style="color:var(--muted); max-width:52ch;">Notre écusson réunit le vert et le rouge du Portugal, rehaussés d'un liseré or en hommage à la ville de Rebecq qui nous accueille depuis toujours.</p>
+
+          <dl>
+            <dt>Racines</dt><dd>Portugal 🇵🇹</dd>
+            <dt>Ancrage</dt><dd>Rebecq, Brabant wallon</dd>
+            <dt>Discipline</dt><dd>Football amateur</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA BAND ============ -->
+  <section class="cta-band">
+    <div class="wrap">
+      <h3>Envie de nous rejoindre ou de suivre le club&nbsp;? <span class="accent">Retrouvez-nous sur Facebook.</span></h3>
+      <a href="https://www.facebook.com/people/Rebecq-Portugal/100094013284769/" target="_blank" rel="noopener" class="btn btn-primary">
+        Voir la page Facebook
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer id="contact">
+  <div class="wrap">
+    <div class="top">
+      <div class="brand-block">
+        <img src="https://res.cloudinary.com/dkm8cbylh/image/upload/v1788970278/ChatGPT_Image_9_sept._2026_18_11_08_sqvkm5.png" alt="Blason Rebecq Portugal">
+        <div>
+          <strong style="font-family:var(--font-display); font-weight:400; font-size:1.1rem;">Rebecq Portugal</strong>
+          <p>Club de football — Rebecq, Belgique.</p>
+        </div>
+      </div>
+
+      <div class="links">
+        <div>
+          <h4>Navigation</h4>
+          <a href="#accueil">Accueil</a>
+          <a href="#identite">Identité</a>
+          <a href="#blason">Le blason</a>
+        </div>
+        <div>
+          <h4>Suivre le club</h4>
+          <a href="https://www.facebook.com/people/Rebecq-Portugal/100094013284769/" target="_blank" rel="noopener" class="social-dot">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3.2h-3.1V7.7c0-.9.3-1.6 1.6-1.6h1.7V3.2C15.9 3 15 3 13.9 3c-2.3 0-3.9 1.4-3.9 4v2.8H7.3v3.2H10v8h3.5z"/></svg>
+            Facebook
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <span>&copy; <span id="year"></span> Rebecq Portugal. Tous droits réservés.</span>
+      <span>Site en construction — plus de contenu à venir.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ----- year -----
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ----- loader sequence -----
+  const loader = document.getElementById('loader');
+  const body = document.body;
+
+  function startLoader(){
+    requestAnimationFrame(()=>{
+      loader.classList.add('ring-in');
+    });
+  }
+  startLoader();
+
+  window.addEventListener('load', ()=>{
+    const MIN_TIME = 1500;
+    const start = performance.now();
+    const elapsed = performance.now() - start;
+    const wait = Math.max(0, MIN_TIME - elapsed);
+    setTimeout(()=>{
+      loader.classList.add('hide');
+      body.classList.remove('is-loading');
+      setTimeout(()=> loader.remove(), 1200);
+    }, wait);
+  });
+
+  // fallback in case load event is slow/unavailable
+  setTimeout(()=>{
+    if(body.classList.contains('is-loading')){
+      loader.classList.add('hide');
+      body.classList.remove('is-loading');
+      setTimeout(()=> loader && loader.remove(), 1200);
+    }
+  }, 4000);
+
+  // ----- header scroll state -----
+  const header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', ()=>{
+    header.classList.toggle('scrolled', window.scrollY > 30);
+  }, { passive:true });
+
+  // ----- mobile nav -----
+  const burger = document.getElementById('burger');
+  const nav = document.getElementById('primaryNav');
+  burger.addEventListener('click', ()=>{
+    burger.classList.toggle('open');
+    nav.classList.toggle('open');
+  });
+  nav.querySelectorAll('a').forEach(a=>{
+    a.addEventListener('click', ()=>{
+      burger.classList.remove('open');
+      nav.classList.remove('open');
+    });
+  });
+
+  // ----- stats reveal (single orchestrated moment) -----
+  const cards = document.querySelectorAll('.stat-card');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach((entry, i)=>{
+      if(entry.isIntersecting){
+        setTimeout(()=> entry.target.classList.add('in'), i * 90);
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold:0.3 });
+  cards.forEach(c=> io.observe(c));
+
+  // ----- hero parallax on scroll -----
+  const sash = document.querySelector('.sash');
+  const emblem = document.querySelector('.hero-emblem');
+  window.addEventListener('scroll', ()=>{
+    const y = window.scrollY;
+    if(sash) sash.style.transform = `rotate(18deg) translateY(${y * 0.08}px)`;
+    if(emblem) emblem.style.transform = `translateY(${y * 0.05}px)`;
+  }, { passive:true });
+</script>
+
+</body>
+</html>
